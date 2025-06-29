@@ -235,7 +235,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         UpdatePlayerList();
     }
 
-    #region Fusion Callbacks (empty implementations)
+    #region Fusion Callbacks
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress addr, NetConnectFailedReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest req, byte[] token) { }
