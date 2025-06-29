@@ -25,6 +25,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
 
     [Header("Leave Room UI")]
     public Button leaveRoomButton;
+
     private NetworkRunner runner;
     private bool inLobby = false;
     private bool inRoom = false;
@@ -63,7 +64,6 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log($"Joined or created lobby '{lobbyName}'.");
 
             sessionListContainer.gameObject.SetActive(true);
-
             createSessionButton.interactable = true;
         }
         else
@@ -73,16 +73,13 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessions)
     {
         if (!inLobby || inRoom)
             return;
 
         foreach (Transform child in sessionListContainer)
-        {
             Destroy(child.gameObject);
-        }
 
         foreach (var s in sessions)
         {
@@ -101,7 +98,6 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
     async void OnCreateSessionClicked()
     {
         string newSessionName = sessionNameInput.text.Trim();
@@ -115,6 +111,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         {
             GameMode = GameMode.Shared,
             SessionName = newSessionName,
+            Scene = SceneRef.FromIndex(1),
             IsOpen = true,
             IsVisible = true,
             CustomLobbyName = lobbyInput.text.Trim()
@@ -140,13 +137,13 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-
     async void JoinExistingSession(string sessionName)
     {
         var startArgs = new StartGameArgs()
         {
             GameMode = GameMode.Shared,
             SessionName = sessionName,
+            Scene = SceneRef.FromIndex(1),
             IsOpen = true,
             IsVisible = true,
             CustomLobbyName = lobbyInput.text.Trim()
@@ -175,9 +172,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
     void UpdatePlayerList()
     {
         foreach (Transform t in playerListContainer)
-        {
             Destroy(t.gameObject);
-        }
 
         foreach (PlayerRef p in runner.ActivePlayers)
         {
@@ -185,6 +180,12 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
             TMP_Text textComp = txtObj.GetComponent<TMP_Text>();
             textComp.text = $"Player {p.PlayerId}";
         }
+    }
+
+    async void OnLeaveRoomClicked()
+    {
+        await runner.Shutdown();
+        ResetAll();
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
@@ -197,14 +198,6 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (inRoom)
             UpdatePlayerList();
-    }
-
-
-    async void OnLeaveRoomClicked()
-    {
-        await runner.Shutdown();
-
-        ResetAll();
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
@@ -235,7 +228,14 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
             Destroy(t.gameObject);
     }
 
-    #region Fusion callbacks
+    public void OnSceneLoadDone(NetworkRunner runner)
+    {
+        roomPanel.SetActive(true);
+        leaveRoomButton.interactable = true;
+        UpdatePlayerList();
+    }
+
+    #region Fusion Callbacks (empty implementations)
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress addr, NetConnectFailedReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest req, byte[] token) { }
@@ -249,6 +249,5 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
-    public void OnSceneLoadDone(NetworkRunner runner) { }
     #endregion
 }
