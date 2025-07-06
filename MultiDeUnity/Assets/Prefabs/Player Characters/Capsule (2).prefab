@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 3752163381234395222}
   - component: {fileID: 6708705332777356331}
   - component: {fileID: 5192121459694279200}
+  - component: {fileID: 7763176956120289644}
   m_Layer: 0
   m_Name: Capsule (2)
   m_TagString: Untagged
@@ -125,7 +126,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SortKey: 193116762
   ObjectInterest: 1
-  Flags: 1
+  Flags: 262145
   NestedObjects: []
-  NetworkedBehaviours: []
+  NetworkedBehaviours:
+  - {fileID: 7763176956120289644}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &7763176956120289644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062807254338773874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  DisableSharedModeInterpolation: 0
