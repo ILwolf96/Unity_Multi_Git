@@ -9,47 +9,49 @@ using System.Threading.Tasks;
 public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("Lobby UI")]
-    public TMP_InputField lobbyInput;
-    public Button joinLobbyButton;
-    public Transform sessionListContainer;
-    public GameObject sessionButtonPrefab;
+    [SerializeField] private TMP_InputField lobbyInput = null;
+    [SerializeField] private Button joinLobbyButton = null;
+    [SerializeField] private Transform sessionListContainer = null;
+    [SerializeField] private GameObject sessionButtonPrefab = null;
 
     [Header("Create Session UI")]
-    public TMP_InputField sessionNameInput;
-    public Button createSessionButton;
+    [SerializeField] private TMP_InputField sessionNameInput = null;
+    [SerializeField] private Button createSessionButton = null;
+    [SerializeField] private bool isSessionVisibleInLobby = true;
+
 
     [Header("Room (In-Game) UI")]
-    public GameObject roomPanel;
-    public Transform playerListContainer;
-    public GameObject playerTextPrefab;
+    [SerializeField] private GameObject roomPanel = null;
+    [SerializeField] private Transform playerListContainer = null;
+    [SerializeField] private GameObject playerTextPrefab = null;
 
     [Header("Leave Room UI")]
-    public Button leaveRoomButton;
+    [SerializeField] private Button leaveRoomButton = null;
 
-    private NetworkRunner runner;
-    private bool inLobby = false;
-    private bool inRoom = false;
+    private NetworkRunner _runner;
+    private bool _inLobby = false;
+    private bool _inRoom = false;
 
-    async void Start()
+    private async void Start()
     {
-        runner = FindObjectOfType<NetworkRunner>() ?? gameObject.AddComponent<NetworkRunner>();
+        _runner = FindObjectOfType<NetworkRunner>() ?? gameObject.AddComponent<NetworkRunner>();
 
-        runner.ProvideInput = true;
-        runner.AddCallbacks(this);
+        _runner.ProvideInput = true;
+        _runner.AddCallbacks(this);
 
         joinLobbyButton.interactable = true;
         createSessionButton.interactable = false;
         leaveRoomButton.interactable = false;
 
-        joinLobbyButton.onClick.AddListener(OnJoinLobbyClicked);
-        createSessionButton.onClick.AddListener(OnCreateSessionClicked);
-        leaveRoomButton.onClick.AddListener(OnLeaveRoomClicked);
+        joinLobbyButton.onClick.AddListener(JoinLobbyAsync);
+        createSessionButton.onClick.AddListener(CreateSessionAsync);
+        leaveRoomButton.onClick.AddListener(LeaveRoomAsync);
 
         sessionListContainer.gameObject.SetActive(false);
         roomPanel.SetActive(false);
     }
 
-    async void OnJoinLobbyClicked()
+    private async void JoinLobbyAsync()
     {
         string lobbyName = lobbyInput.text.Trim();
         if (string.IsNullOrEmpty(lobbyName))
@@ -57,11 +59,11 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
 
         joinLobbyButton.interactable = false;
 
-        var lobbyResult = await runner.JoinSessionLobby(SessionLobby.Custom, lobbyName);
+        var lobbyResult = await _runner.JoinSessionLobby(SessionLobby.Custom, lobbyName);
         if (lobbyResult.Ok)
         {
-            inLobby = true;
-            Debug.Log($"Joined or created lobby '{lobbyName}'.");
+            _inLobby = true;
+            Debug.Log($"Joined lobby '{lobbyName}'.");
 
             sessionListContainer.gameObject.SetActive(true);
             createSessionButton.interactable = true;
@@ -75,37 +77,41 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessions)
     {
-        if (!inLobby || inRoom)
+        if (!_inLobby || _inRoom)
             return;
 
         foreach (Transform child in sessionListContainer)
-            Destroy(child.gameObject);
-
-        foreach (var s in sessions)
         {
-            if (!s.IsOpen || !s.IsVisible)
+            Destroy(child.gameObject);
+        }
+
+        foreach (var session in sessions)
+        {
+            if (!session.IsOpen || !session.IsVisible)
                 continue;
 
             GameObject entry = Instantiate(sessionButtonPrefab, sessionListContainer);
             TMP_Text label = entry.GetComponentInChildren<TMP_Text>();
-            label.text = $"{s.Name} ({s.PlayerCount}/{s.MaxPlayers})";
+            label.text = $"{session.Name} ({session.PlayerCount}/{session.MaxPlayers})";
 
             Button btn = entry.GetComponent<Button>();
             btn.interactable = true;
 
-            string sessionName = s.Name;
-            btn.onClick.AddListener(() => JoinExistingSession(sessionName));
+            string sessionNameCopy = session.Name; 
+            btn.onClick.AddListener(() => JoinExistingSessionAsync(sessionNameCopy));
         }
     }
 
-    async void OnCreateSessionClicked()
+    private async void CreateSessionAsync()
     {
         string newSessionName = sessionNameInput.text.Trim();
         if (string.IsNullOrEmpty(newSessionName))
         {
-            Debug.LogWarning("Session name is empty. Type a name first.");
+            Debug.LogWarning("Session name cannot be empty.");
             return;
         }
+
+
 
         var startArgs = new StartGameArgs()
         {
@@ -113,14 +119,15 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
             SessionName = newSessionName,
             Scene = SceneRef.FromIndex(1),
             IsOpen = true,
-            IsVisible = true,
+            IsVisible = isSessionVisibleInLobby,
             CustomLobbyName = lobbyInput.text.Trim()
         };
 
-        var result = await runner.StartGame(startArgs);
+
+        var result = await _runner.StartGame(startArgs);
         if (result.Ok)
         {
-            inRoom = true;
+            _inRoom = true;
             Debug.Log($"Created and joined session '{newSessionName}'.");
 
             sessionListContainer.gameObject.SetActive(false);
@@ -137,7 +144,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    async void JoinExistingSession(string sessionName)
+    private async void JoinExistingSessionAsync(string sessionName)
     {
         var startArgs = new StartGameArgs()
         {
@@ -149,10 +156,10 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
             CustomLobbyName = lobbyInput.text.Trim()
         };
 
-        var result = await runner.StartGame(startArgs);
+        var result = await _runner.StartGame(startArgs);
         if (result.Ok)
         {
-            inRoom = true;
+            _inRoom = true;
             Debug.Log($"Joined session '{sessionName}'.");
 
             sessionListContainer.gameObject.SetActive(false);
@@ -169,51 +176,53 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    void UpdatePlayerList()
+    private void UpdatePlayerList()
     {
-        foreach (Transform t in playerListContainer)
-            Destroy(t.gameObject);
-
-        foreach (PlayerRef p in runner.ActivePlayers)
+        foreach (Transform child in playerListContainer)
         {
-            GameObject txtObj = Instantiate(playerTextPrefab, playerListContainer);
-            TMP_Text textComp = txtObj.GetComponent<TMP_Text>();
-            textComp.text = $"Player {p.PlayerId}";
+            Destroy(child.gameObject);
+        }
+
+        foreach (PlayerRef player in _runner.ActivePlayers)
+        {
+            GameObject playerText = Instantiate(playerTextPrefab, playerListContainer);
+            TMP_Text textComponent = playerText.GetComponent<TMP_Text>();
+            textComponent.text = $"Player {player.PlayerId}";
         }
     }
 
-    async void OnLeaveRoomClicked()
+    private async void LeaveRoomAsync()
     {
-        await runner.Shutdown();
-        ResetAll();
+        await _runner.Shutdown();
+        ResetUI();
     }
 
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (inRoom)
+        if (_inRoom)
             UpdatePlayerList();
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (inRoom)
+        if (_inRoom)
             UpdatePlayerList();
     }
 
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
-        ResetAll();
+        ResetUI();
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason reason)
     {
-        ResetAll();
+        ResetUI();
     }
 
-    void ResetAll()
+    private void ResetUI()
     {
-        inLobby = false;
-        inRoom = false;
+        _inLobby = false;
+        _inRoom = false;
 
         joinLobbyButton.interactable = true;
         createSessionButton.interactable = false;
@@ -222,10 +231,11 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         roomPanel.SetActive(false);
         leaveRoomButton.interactable = false;
 
-        foreach (Transform t in sessionListContainer)
-            Destroy(t.gameObject);
-        foreach (Transform t in playerListContainer)
-            Destroy(t.gameObject);
+        foreach (Transform child in sessionListContainer)
+            Destroy(child.gameObject);
+
+        foreach (Transform child in playerListContainer)
+            Destroy(child.gameObject);
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
@@ -235,7 +245,8 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         UpdatePlayerList();
     }
 
-    #region Fusion Callbacks
+    #region INetworkRunnerCallbacks (empty implementations)
+
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress addr, NetConnectFailedReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest req, byte[] token) { }
@@ -249,5 +260,6 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnSceneLoadStart(NetworkRunner runner) { }
+
     #endregion
 }
