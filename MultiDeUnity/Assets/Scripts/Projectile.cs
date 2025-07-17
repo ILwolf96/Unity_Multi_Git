@@ -1,53 +1,58 @@
-using UnityEngine;
 using Fusion;
+using UnityEngine;
 
-[RequireComponent(typeof(NetworkObject))]
-[RequireComponent(typeof(Collider))]
 public class Projectile : NetworkBehaviour
 {
-    [SerializeField] private float speed = 10f;
-    [SerializeField] private float lifetime = 3f;
+    [Networked] private Vector3 NetworkedPosition { get; set; }
 
-    private float _spawnTime;
-    private Vector3 _direction;
-    private Material _projectileMaterial;
+    private Vector3 velocity;
+    private float timer;
+    public float lifetime = 3f;
 
-    private Renderer _renderer;
+    private bool hasInitialized = false;
+
+    public void Initialize(Vector3 velocity)
+    {
+        this.velocity = velocity;
+        timer = 0f;
+        if (hasInitialized)
+        {
+            NetworkedPosition = transform.position;
+        }
+    }
 
     public override void Spawned()
     {
-        _spawnTime = Time.time;
-
-        _renderer = GetComponent<Renderer>();
-        if (_renderer != null && _projectileMaterial != null)
-        {
-            _renderer.material = _projectileMaterial;
-        }
+        hasInitialized = true;
+        NetworkedPosition = transform.position;
     }
 
-    public void Initialize(Vector3 direction, Material inheritedMaterial)
+    public override void FixedUpdateNetwork()
     {
-        _direction = direction.normalized;
-        _projectileMaterial = inheritedMaterial;
-    }
+        if (!hasInitialized)
+            return;
 
-    private void Update()
-    {
         if (Object.HasStateAuthority)
         {
-            transform.position += _direction * speed * Time.deltaTime;
+            NetworkedPosition += velocity * Runner.DeltaTime;
+            timer += Runner.DeltaTime;
 
-            if (Time.time - _spawnTime >= lifetime)
+            if (timer > lifetime)
             {
                 Runner.Despawn(Object);
+                return;
             }
         }
+
+        transform.position = NetworkedPosition;
+        transform.rotation = Quaternion.LookRotation(velocity);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!Object.HasStateAuthority) return;
-
-        Runner.Despawn(Object);
+        if (Object.HasStateAuthority)
+        {
+            Runner.Despawn(Object);
+        }
     }
 }

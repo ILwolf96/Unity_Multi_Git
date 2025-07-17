@@ -127,7 +127,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SortKey: 2559581715
   ObjectInterest: 1
-  Flags: 262145
+  Flags: 786433
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 5892985323931870951}
@@ -164,3 +164,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 15
   rotationSpeed: 180
+  maxRotationAngle: 45
+  projectilePrefab: {fileID: 8458381109446397849, guid: 27e6a3d364aca144fbbf64e5db2c4385, type: 3}
+  projectileSpeed: 10
+  fireCooldown: 0.5
