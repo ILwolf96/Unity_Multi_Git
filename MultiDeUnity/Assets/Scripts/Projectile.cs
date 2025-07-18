@@ -1,9 +1,15 @@
 using Fusion;
 using UnityEngine;
 
+[RequireComponent(typeof(NetworkObject))]
 public class Projectile : NetworkBehaviour
 {
     [Networked] private Vector3 NetworkedPosition { get; set; }
+
+    [Networked]
+    public int NetworkedCharacterIndex { get; set; }
+
+    [SerializeField] private Material[] projectileMaterials;
 
     private Vector3 velocity;
     private float timer;
@@ -11,20 +17,25 @@ public class Projectile : NetworkBehaviour
 
     private bool hasInitialized = false;
 
-    public void Initialize(Vector3 velocity)
+    public void Initialize(Vector3 velocity, int characterIndex)
     {
         this.velocity = velocity;
-        timer = 0f;
-        if (hasInitialized)
+        this.timer = 0f;
+
+        if (Object.HasStateAuthority)
         {
-            NetworkedPosition = transform.position;
+            NetworkedCharacterIndex = characterIndex;
         }
+
+        hasInitialized = true;
+        NetworkedPosition = transform.position;
     }
 
     public override void Spawned()
     {
-        hasInitialized = true;
         NetworkedPosition = transform.position;
+        hasInitialized = true;
+        ApplyProjectileMaterial(NetworkedCharacterIndex);
     }
 
     public override void FixedUpdateNetwork()
@@ -48,11 +59,33 @@ public class Projectile : NetworkBehaviour
         transform.rotation = Quaternion.LookRotation(velocity);
     }
 
+    public override void Render()
+    {
+        ApplyProjectileMaterial(NetworkedCharacterIndex);
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         if (Object.HasStateAuthority)
         {
             Runner.Despawn(Object);
+        }
+    }
+
+    private void ApplyProjectileMaterial(int charIndex)
+    {
+        if (projectileMaterials == null || charIndex < 0 || charIndex >= projectileMaterials.Length)
+        {
+            return;
+        }
+
+        Renderer projRend = GetComponentInChildren<Renderer>();
+        if (projRend != null)
+        {
+            projRend.material = projectileMaterials[charIndex];
+        }
+        else
+        {
         }
     }
 }

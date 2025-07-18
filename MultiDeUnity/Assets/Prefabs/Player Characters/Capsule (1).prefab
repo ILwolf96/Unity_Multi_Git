@@ -162,9 +162,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e522f2fc05bdde438999a22a8f61569, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _NetworkedCharacterIndex: 0
   moveSpeed: 15
   rotationSpeed: 180
   maxRotationAngle: 45
   projectilePrefab: {fileID: 8458381109446397849, guid: 27e6a3d364aca144fbbf64e5db2c4385, type: 3}
   projectileSpeed: 10
   fireCooldown: 0.5
+  playerMaterials:
+  - {fileID: 2100000, guid: 982385e29b6f62947941e2a0bf2b87f4, type: 2}

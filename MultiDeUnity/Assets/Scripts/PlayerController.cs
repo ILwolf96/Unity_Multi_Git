@@ -12,6 +12,9 @@ public struct PlayerInputData : INetworkInput
 [RequireComponent(typeof(NetworkObject))]
 public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 {
+    [Networked]
+    public int NetworkedCharacterIndex { get; set; }
+
     [Networked] private Vector3 NetworkedPosition { get; set; }
     [Networked] private Quaternion NetworkedRotation { get; set; }
 
@@ -25,6 +28,8 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private float fireCooldown = 0.5f;
 
+    [SerializeField] private Material[] playerMaterials;
+
     private float lastFireTime = 0f;
 
     public override void Spawned()
@@ -33,6 +38,8 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         NetworkedRotation = transform.rotation;
         lastFireTime = -fireCooldown;
         Runner.AddCallbacks(this);
+
+        ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
 
     public override void FixedUpdateNetwork()
@@ -54,7 +61,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
             if (Object.HasStateAuthority)
             {
                 lastFireTime = Runner.SimulationTime;
-                Shoot();
+                Shoot(NetworkedCharacterIndex);
             }
         }
 
@@ -62,7 +69,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         transform.rotation = NetworkedRotation;
     }
 
-    private void Shoot()
+    private void Shoot(int characterIndex)
     {
         if (!Object.HasStateAuthority)
             return;
@@ -71,16 +78,36 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         NetworkObject proj = Runner.Spawn(projectilePrefab, pos, transform.rotation, Object.InputAuthority);
 
         if (proj.TryGetComponent<Projectile>(out var script))
-            script.Initialize(transform.forward * projectileSpeed);
+        {
+            script.Initialize(transform.forward * projectileSpeed, characterIndex);
+        }
+    }
 
-        var playerRend = GetComponentInChildren<Renderer>();
-        var projRend = proj.GetComponentInChildren<Renderer>();
-        if (playerRend != null && projRend != null)
-            projRend.material = playerRend.material;
+    private void ApplyPlayerMaterial(int charIndex)
+    {
+        if (playerMaterials == null || charIndex < 0 || charIndex >= playerMaterials.Length)
+        {
+            Debug.LogError($"Invalid character index {charIndex} or playerMaterials array not set in PlayerController on {name}.");
+            return;
+        }
+
+        Renderer playerRend = GetComponentInChildren<Renderer>();
+        if (playerRend != null)
+        {
+            playerRend.material = playerMaterials[charIndex];
+        }
+        else
+        {
+            Debug.LogWarning($"No Renderer found in children of PlayerController on {name} to apply material.");
+        }
+    }
+
+    public override void Render()
+    {
+        ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
 
     #region INetworkRunnerCallbacks
-
     public void OnInput(NetworkRunner runner, NetworkInput inputPackage)
     {
         if (!Object.HasInputAuthority) return;
@@ -110,6 +137,5 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
     public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
     public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
-
     #endregion
 }

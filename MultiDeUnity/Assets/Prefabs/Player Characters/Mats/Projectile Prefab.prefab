@@ -141,5 +141,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 73518aedbe77d3043a9a22dbb80fa8a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 10
+  _NetworkedCharacterIndex: 0
+  projectileMaterials:
+  - {fileID: 2100000, guid: 3310131bd841e0942bf70cf5f69b9c20, type: 2}
+  - {fileID: 2100000, guid: 982385e29b6f62947941e2a0bf2b87f4, type: 2}
+  - {fileID: 2100000, guid: 49b2c52c3b9627646a74a2af4c175e56, type: 2}
+  - {fileID: 2100000, guid: 2c7ce7c1e8a8711409452e3b27e4cc09, type: 2}
+  - {fileID: 2100000, guid: e28e5223098b9ba49a456f528e558726, type: 2}
+  - {fileID: 2100000, guid: 9da04608d1710f846b32fa73c814f72c, type: 2}
+  - {fileID: 2100000, guid: b72283b735c799c4bba320850d6c2e27, type: 2}
+  - {fileID: 2100000, guid: 0728ce4c9ecf2154691feb2d97db7481, type: 2}
+  - {fileID: 2100000, guid: c3b0fb8726bd1b34bbad2c30d0de93b8, type: 2}
+  - {fileID: 2100000, guid: becb776879faecf4cb4f3eed913c05b6, type: 2}
+  - {fileID: 2100000, guid: 110787dde8ed7aa46b9b5acb99aa78c2, type: 2}
   lifetime: 3
