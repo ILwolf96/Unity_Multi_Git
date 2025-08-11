@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: -8345685044357746541}
   - component: {fileID: 6733115060190434060}
   - component: {fileID: -3526249226123879443}
+  - component: {fileID: -8787209762640532201}
   m_Layer: 0
   m_Name: Capsule (8)
   m_TagString: Untagged
@@ -163,6 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _NetworkedCharacterIndex: 0
+  _Score: 0
   moveSpeed: 15
   rotationSpeed: 180
   maxRotationAngle: 45
@@ -171,3 +173,30 @@ MonoBehaviour:
   fireCooldown: 0.5
   playerMaterials:
   - {fileID: 2100000, guid: c3b0fb8726bd1b34bbad2c30d0de93b8, type: 2}
+--- !u!54 &-8787209762640532201
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3450010932095148921}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

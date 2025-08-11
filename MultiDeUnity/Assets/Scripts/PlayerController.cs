@@ -15,6 +15,11 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     [Networked]
     public int NetworkedCharacterIndex { get; set; }
 
+    [Networked]
+    public int Score { get; set; }
+
+    [Networked] public bool CanMove { get; set; } = false;
+
     [Networked] private Vector3 NetworkedPosition { get; set; }
     [Networked] private Quaternion NetworkedRotation { get; set; }
 
@@ -23,7 +28,8 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private float rotationSpeed = 180f;
     [SerializeField] private float maxRotationAngle = 45f;
 
-    [Header("Shooting")]
+
+    [Header("Shooting")] // Not working anymore, not removing it to prevent erros, not time for more errors
     [SerializeField] private NetworkObject projectilePrefab = null;
     [SerializeField] private float projectileSpeed = 10f;
     [SerializeField] private float fireCooldown = 0.5f;
@@ -39,11 +45,13 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         lastFireTime = -fireCooldown;
         Runner.AddCallbacks(this);
 
-        ApplyPlayerMaterial(NetworkedCharacterIndex);
+        //ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
 
     public override void FixedUpdateNetwork()
     {
+        if (!CanMove) return;
+
         if (!GetInput<PlayerInputData>(out var input))
             return;
 
@@ -55,7 +63,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
             float maxA = Mathf.Min(rotationSpeed * Runner.DeltaTime, maxRotationAngle);
             NetworkedRotation = Quaternion.RotateTowards(NetworkedRotation, target, maxA);
         }
-
+        /*
         if (input.fire && Runner.SimulationTime - lastFireTime >= fireCooldown)
         {
             if (Object.HasStateAuthority)
@@ -64,25 +72,30 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
                 Shoot(NetworkedCharacterIndex);
             }
         }
+        */
 
         transform.position = NetworkedPosition;
         transform.rotation = NetworkedRotation;
     }
 
-    private void Shoot(int characterIndex)
+    // Score helper (call from state authority code)
+    public void AddScore(int amount)
     {
         if (!Object.HasStateAuthority)
-            return;
-
-        Vector3 pos = transform.position + transform.forward * 1.5f;
-        NetworkObject proj = Runner.Spawn(projectilePrefab, pos, transform.rotation, Object.InputAuthority);
-
-        if (proj.TryGetComponent<Projectile>(out var script))
         {
-            script.Initialize(transform.forward * projectileSpeed, characterIndex);
+            // Ideally only state authority modifies networked vars, but this is a helper if called locally on authority.
+            return;
         }
+
+        Score += amount;
     }
 
+    // Optionally a safe getter for local UI
+    public int GetScore()
+    {
+        return Score;
+    }
+    /*
     private void ApplyPlayerMaterial(int charIndex)
     {
         if (playerMaterials == null || charIndex < 0 || charIndex >= playerMaterials.Length)
@@ -106,7 +119,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     {
         ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
-
+    */
     #region INetworkRunnerCallbacks
     public void OnInput(NetworkRunner runner, NetworkInput inputPackage)
     {
@@ -115,7 +128,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         inputPackage.Set(new PlayerInputData
         {
             move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
-            fire = Input.GetKey(KeyCode.Space)
+            //fire = Input.GetKey(KeyCode.Space) // Not Important anymore, not using it, in the correct version
         });
     }
 

@@ -23,6 +23,8 @@ public class CharacterSelectionManager : NetworkBehaviour
     private Dictionary<PlayerRef, int> playerSelections = new();
     private HashSet<int> takenCharacters = new();
     private HashSet<int> assignedSpawnPoints = new();
+    // map player -> spawn index so we can free it later
+    private Dictionary<PlayerRef, int> playerSpawnIndex = new();
 
     private NetworkRunner runner;
 
@@ -81,11 +83,25 @@ public class CharacterSelectionManager : NetworkBehaviour
 
         NetworkObject networkPlayerObject = runner.Spawn(prefab, pos, rot, inputAuthority: requester);
 
+        // Set the runner's player object reference
         runner.SetPlayerObject(requester, networkPlayerObject);
 
+        // Mark character and spawn index as taken
         takenCharacters.Add(characterIndex);
         playerSelections[requester] = characterIndex;
         assignedSpawnPoints.Add(spawnIndex);
+        playerSpawnIndex[requester] = spawnIndex; //remember which spawn index the player got
+
+        // set the spawned player's NetworkedCharacterIndex (server/state-authority)
+        if (networkPlayerObject.TryGetComponent<PlayerController>(out var pc))
+        {
+            
+            pc.NetworkedCharacterIndex = characterIndex;
+        }
+        else
+        {
+            Debug.LogWarning($"Spawned player object does not contain PlayerController component (index {characterIndex}).");
+        }
 
         RPC_SelectionApproved(requester);
     }
@@ -127,15 +143,104 @@ public class CharacterSelectionManager : NetworkBehaviour
             takenCharacters.Remove(idx);
             playerSelections.Remove(player);
         }
+
+        // Also free the spawn index mapping if present
+        if (playerSpawnIndex.TryGetValue(player, out int spawnIdx))
+        {
+            assignedSpawnPoints.Remove(spawnIdx);
+            playerSpawnIndex.Remove(player);
+        }
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        if (runner.GetPlayerObject(player) != null)
+        // Despawn the player's object, clear player object ref, and free resources.
+        NetworkObject playerObj = runner.GetPlayerObject(player);
+        if (playerObj != null)
         {
+            try
+            {
+                // Attempt to despawn the player's network object to avoid ghost objects.
+                runner.Despawn(playerObj);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"Failed to despawn player object for Player {player.PlayerId}: {ex.Message}");
+            }
+
+            // Make sure runner no longer associates the object with the player
             runner.SetPlayerObject(player, null);
         }
+
+        // Release character + spawn index bookkeeping
         ReleaseCharacter(player);
+    }
+
+    //----------- 
+
+    public int GetSelectedCount()
+    {
+        return playerSelections.Count;
+    }
+
+    // Check if player has selected
+    public bool HasPlayerSelected(PlayerRef player)
+    {
+        return playerSelections.ContainsKey(player);
+    }
+
+    // Return a random available character index, or -1 if none available
+    public int GetRandomAvailableCharacterIndex()
+    {
+        // Build list of available indices
+        List<int> available = new List<int>();
+        for (int i = 0; i < characterPrefabs.Length; i++)
+            if (!takenCharacters.Contains(i))
+                available.Add(i);
+
+        if (available.Count == 0) return -1;
+        int idx = Random.Range(0, available.Count);
+        return available[idx];
+    }
+
+    // Server-side forced selection (call from state authority only)
+    // This duplicates the spawn logic but is a direct server method (not an RPC).
+    public void Server_ForceSelect(PlayerRef requester, int characterIndex)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (takenCharacters.Contains(characterIndex))
+            return;
+
+        int spawnIndex = GetAvailableSpawnPointIndex();
+        if (spawnIndex < 0)
+            return;
+
+        GameObject prefab = characterPrefabs[characterIndex];
+        if (prefab == null || prefab.GetComponent<NetworkObject>() == null)
+            return;
+
+        Vector3 pos = spawnPoints[spawnIndex].position;
+        Quaternion rot = spawnPoints[spawnIndex].rotation;
+
+        NetworkObject networkPlayerObject = runner.Spawn(prefab, pos, rot, inputAuthority: requester);
+
+        runner.SetPlayerObject(requester, networkPlayerObject);
+
+        takenCharacters.Add(characterIndex);
+        playerSelections[requester] = characterIndex;
+        assignedSpawnPoints.Add(spawnIndex);
+        playerSpawnIndex[requester] = spawnIndex;
+
+        // Set the player's networked character index and disable movement until match starts.
+        if (networkPlayerObject.TryGetComponent<PlayerController>(out var pc))
+        {
+            pc.NetworkedCharacterIndex = characterIndex;
+            pc.CanMove = false;
+        }
+
+        RPC_SelectionApproved(requester);
     }
 
     #region Unused INetworkRunnerCallbacks
