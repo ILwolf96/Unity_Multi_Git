@@ -56,10 +56,8 @@ public class CoinSpawner : NetworkBehaviour
 
     public override void Spawned()
     {
-        // Only the host (state authority) spawns coins and runs the loop
         if (Object.HasStateAuthority)
         {
-            // Optional deterministic seed only applied on host
             if (randomSeed >= 0)
                 Random.InitState(randomSeed);
 
@@ -73,7 +71,6 @@ public class CoinSpawner : NetworkBehaviour
         {
             yield return new WaitForSeconds(spawnIntervalSeconds);
 
-            // Only spawn while match running
             if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameManager.MatchState.Running)
                 continue;
 
@@ -124,10 +121,8 @@ public class CoinSpawner : NetworkBehaviour
             currentCoinCount++;
             //Debug.Log($"[CoinSpawner] Host spawned coin '{prefabToUse.name}' at {spawnPos}.");
 
-            // Force clients to apply the exact position/rotation chosen by the host
             if (spawned.TryGetComponent<Coin>(out var coinComp))
             {
-                // Call the RPC from the host/state authority: it will run on all peers
                 coinComp.RPC_SetSpawnTransform(spawnPos, spawnRot);
             }
         }
@@ -136,14 +131,12 @@ public class CoinSpawner : NetworkBehaviour
 
     }
 
-    // Called by coins when they are collected or expire
     public void NotifyCoinDespawned()
     {
         currentCoinCount = Mathf.Max(0, currentCoinCount - 1);
     }
 
 #if UNITY_EDITOR
-    // Draw spawn range gizmo for visual debugging
     private void OnDrawGizmosSelected()
     {
         if (!useSpawnPoints)

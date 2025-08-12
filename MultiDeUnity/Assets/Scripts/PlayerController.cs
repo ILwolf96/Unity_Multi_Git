@@ -12,11 +12,11 @@ public struct PlayerInputData : INetworkInput
 [RequireComponent(typeof(NetworkObject))]
 public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 {
-    [Networked]
-    public int NetworkedCharacterIndex { get; set; }
+    [Networked] public int NetworkedCharacterIndex { get; set; }
 
-    [Networked]
-    public int Score { get; set; }
+    [Networked] public int Score { get; set; } = 0;
+
+    [Networked] public bool IsAI { get; set; } = false;
 
     [Networked] public bool CanMove { get; set; } = false;
 
@@ -28,12 +28,6 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     [SerializeField] private float rotationSpeed = 180f;
     [SerializeField] private float maxRotationAngle = 45f;
 
-
-    [Header("Shooting")] // Not working anymore, not removing it to prevent erros, not time for more errors
-    [SerializeField] private NetworkObject projectilePrefab = null;
-    [SerializeField] private float projectileSpeed = 10f;
-    [SerializeField] private float fireCooldown = 0.5f;
-
     [SerializeField] private Material[] playerMaterials;
 
     private float lastFireTime = 0f;
@@ -42,59 +36,83 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
     {
         NetworkedPosition = transform.position;
         NetworkedRotation = transform.rotation;
-        lastFireTime = -fireCooldown;
+        //lastFireTime = -fireCooldown;
         Runner.AddCallbacks(this);
 
         //ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
 
+
     public override void FixedUpdateNetwork()
     {
-        if (!CanMove) return;
+        bool hasInput = GetInput<PlayerInputData>(out var input);
 
-        if (!GetInput<PlayerInputData>(out var input))
-            return;
-
-        Vector3 dir = new Vector3(input.move.x, 0, input.move.y);
-        if (dir.sqrMagnitude > 0.001f)
+        if (Object.HasStateAuthority)
         {
-            NetworkedPosition += dir * moveSpeed * Runner.DeltaTime;
-            Quaternion target = Quaternion.LookRotation(dir);
-            float maxA = Mathf.Min(rotationSpeed * Runner.DeltaTime, maxRotationAngle);
-            NetworkedRotation = Quaternion.RotateTowards(NetworkedRotation, target, maxA);
-        }
-        /*
-        if (input.fire && Runner.SimulationTime - lastFireTime >= fireCooldown)
-        {
-            if (Object.HasStateAuthority)
+            if (CanMove && hasInput)
             {
-                lastFireTime = Runner.SimulationTime;
-                Shoot(NetworkedCharacterIndex);
+                Vector3 dir = new Vector3(input.move.x, 0f, input.move.y);
+                if (dir.sqrMagnitude > 0.001f)
+                {
+                    NetworkedPosition += dir.normalized * moveSpeed * Runner.DeltaTime;
+
+                    Quaternion target = Quaternion.LookRotation(dir);
+                    float maxA = Mathf.Min(rotationSpeed * Runner.DeltaTime, maxRotationAngle);
+                    NetworkedRotation = Quaternion.RotateTowards(NetworkedRotation, target, maxA);
+                }
             }
         }
-        */
 
         transform.position = NetworkedPosition;
         transform.rotation = NetworkedRotation;
     }
 
-    // Score helper (call from state authority code)
+
+    public int GetScore() => Score;
+
+    /*
     public void AddScore(int amount)
     {
         if (!Object.HasStateAuthority)
         {
-            // Ideally only state authority modifies networked vars, but this is a helper if called locally on authority.
             return;
         }
 
         Score += amount;
     }
+    */
 
-    // Optionally a safe getter for local UI
-    public int GetScore()
+    public void AddScoreServer(int amount)
     {
-        return Score;
+        if (!Object.HasStateAuthority) return;
+        Score += amount;
     }
+
+    public void SetNetworkedTransform(Vector3 pos, Quaternion rot)
+    {
+        if (!Object.HasStateAuthority)
+        {
+            transform.position = pos;
+            transform.rotation = rot;
+            return;
+        }
+
+        NetworkedPosition = pos;
+        NetworkedRotation = rot;
+
+        transform.position = pos;
+        transform.rotation = rot;
+    }
+
+    public void MoveNetworked(Vector3 delta)
+    {
+        if (!Object.HasStateAuthority)
+        {
+            return;
+        }
+        NetworkedPosition += delta;
+    }
+
     /*
     private void ApplyPlayerMaterial(int charIndex)
     {
@@ -120,7 +138,11 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         ApplyPlayerMaterial(NetworkedCharacterIndex);
     }
     */
-    #region INetworkRunnerCallbacks
+
+
+
+
+    #region INetworkRunnerCallbacks stubs (if used)
     public void OnInput(NetworkRunner runner, NetworkInput inputPackage)
     {
         if (!Object.HasInputAuthority) return;
@@ -128,7 +150,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         inputPackage.Set(new PlayerInputData
         {
             move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
-            //fire = Input.GetKey(KeyCode.Space) // Not Important anymore, not using it, in the correct version
+            // fire = Input.GetKey(KeyCode.Space)
         });
     }
 

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6423633880184148801}
   - component: {fileID: -2021522495222420874}
   - component: {fileID: 3403863419904119645}
+  - component: {fileID: 1676432396801653055}
   m_Layer: 0
   m_Name: Capsule (9)
   m_TagString: Untagged
@@ -133,6 +134,7 @@ MonoBehaviour:
   NetworkedBehaviours:
   - {fileID: 6423633880184148801}
   - {fileID: -2021522495222420874}
+  - {fileID: 1676432396801653055}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &6423633880184148801
 MonoBehaviour:
@@ -165,12 +167,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _NetworkedCharacterIndex: 0
   _Score: 0
+  _IsAI: 0
+  _CanMove: 0
   moveSpeed: 15
   rotationSpeed: 180
   maxRotationAngle: 45
-  projectilePrefab: {fileID: 8458381109446397849, guid: 27e6a3d364aca144fbbf64e5db2c4385, type: 3}
-  projectileSpeed: 10
-  fireCooldown: 0.5
   playerMaterials:
   - {fileID: 2100000, guid: becb776879faecf4cb4f3eed913c05b6, type: 2}
 --- !u!54 &3403863419904119645
@@ -200,3 +201,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1676432396801653055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6231863594535109742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5dd3f3f537e32e44b1a1aac22d2b2c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 4
+  decisionInterval: 0.25
+  pickupRange: 1.2
+  avoidThreshold: 0.75

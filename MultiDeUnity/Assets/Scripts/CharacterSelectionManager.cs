@@ -23,7 +23,6 @@ public class CharacterSelectionManager : NetworkBehaviour
     private Dictionary<PlayerRef, int> playerSelections = new();
     private HashSet<int> takenCharacters = new();
     private HashSet<int> assignedSpawnPoints = new();
-    // map player -> spawn index so we can free it later
     private Dictionary<PlayerRef, int> playerSpawnIndex = new();
 
     private NetworkRunner runner;
@@ -83,16 +82,13 @@ public class CharacterSelectionManager : NetworkBehaviour
 
         NetworkObject networkPlayerObject = runner.Spawn(prefab, pos, rot, inputAuthority: requester);
 
-        // Set the runner's player object reference
         runner.SetPlayerObject(requester, networkPlayerObject);
 
-        // Mark character and spawn index as taken
         takenCharacters.Add(characterIndex);
         playerSelections[requester] = characterIndex;
         assignedSpawnPoints.Add(spawnIndex);
-        playerSpawnIndex[requester] = spawnIndex; //remember which spawn index the player got
+        playerSpawnIndex[requester] = spawnIndex;
 
-        // set the spawned player's NetworkedCharacterIndex (server/state-authority)
         if (networkPlayerObject.TryGetComponent<PlayerController>(out var pc))
         {
             
@@ -144,7 +140,6 @@ public class CharacterSelectionManager : NetworkBehaviour
             playerSelections.Remove(player);
         }
 
-        // Also free the spawn index mapping if present
         if (playerSpawnIndex.TryGetValue(player, out int spawnIdx))
         {
             assignedSpawnPoints.Remove(spawnIdx);
@@ -154,13 +149,11 @@ public class CharacterSelectionManager : NetworkBehaviour
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        // Despawn the player's object, clear player object ref, and free resources.
         NetworkObject playerObj = runner.GetPlayerObject(player);
         if (playerObj != null)
         {
             try
             {
-                // Attempt to despawn the player's network object to avoid ghost objects.
                 runner.Despawn(playerObj);
             }
             catch (System.Exception ex)
@@ -168,11 +161,9 @@ public class CharacterSelectionManager : NetworkBehaviour
                 Debug.LogWarning($"Failed to despawn player object for Player {player.PlayerId}: {ex.Message}");
             }
 
-            // Make sure runner no longer associates the object with the player
             runner.SetPlayerObject(player, null);
         }
 
-        // Release character + spawn index bookkeeping
         ReleaseCharacter(player);
     }
 
@@ -183,16 +174,23 @@ public class CharacterSelectionManager : NetworkBehaviour
         return playerSelections.Count;
     }
 
-    // Check if player has selected
     public bool HasPlayerSelected(PlayerRef player)
     {
         return playerSelections.ContainsKey(player);
     }
 
-    // Return a random available character index, or -1 if none available
+    public void MarkCharacterTaken(int characterIndex)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!takenCharacters.Contains(characterIndex))
+            takenCharacters.Add(characterIndex);
+    }
+
+
     public int GetRandomAvailableCharacterIndex()
     {
-        // Build list of available indices
         List<int> available = new List<int>();
         for (int i = 0; i < characterPrefabs.Length; i++)
             if (!takenCharacters.Contains(i))
@@ -203,8 +201,6 @@ public class CharacterSelectionManager : NetworkBehaviour
         return available[idx];
     }
 
-    // Server-side forced selection (call from state authority only)
-    // This duplicates the spawn logic but is a direct server method (not an RPC).
     public void Server_ForceSelect(PlayerRef requester, int characterIndex)
     {
         if (!Object.HasStateAuthority)
@@ -233,7 +229,6 @@ public class CharacterSelectionManager : NetworkBehaviour
         assignedSpawnPoints.Add(spawnIndex);
         playerSpawnIndex[requester] = spawnIndex;
 
-        // Set the player's networked character index and disable movement until match starts.
         if (networkPlayerObject.TryGetComponent<PlayerController>(out var pc))
         {
             pc.NetworkedCharacterIndex = characterIndex;

@@ -29,13 +29,12 @@ public class FinalScorePanelSimple : MonoBehaviour
     private void Awake()
     {
         if (panelRoot != null)
-            panelRoot.SetActive(false); // ensure initial state
+            panelRoot.SetActive(false);
     }
 
     private void Start()
     {
         runner = FindObjectOfType<NetworkRunner>();
-        // Defensive: if entries not set, log once
         if (entryTexts == null || entryTexts.Length == 0)
             Debug.LogWarning("[FinalScorePanelSimple] No entryTexts assigned. Please assign TMP slots in inspector.");
     }
@@ -47,7 +46,6 @@ public class FinalScorePanelSimple : MonoBehaviour
 
         if (GameManager.Instance == null) return;
 
-        // Refresh live values at interval
         timer -= Time.unscaledDeltaTime;
         if (timer <= 0f)
         {
@@ -55,7 +53,6 @@ public class FinalScorePanelSimple : MonoBehaviour
             RefreshLiveValues();
         }
 
-        // Show final panel when GameOver (only once)
         if (!shown && GameManager.Instance.CurrentState == GameManager.MatchState.GameOver)
         {
             ShowFinalPanel();
@@ -63,7 +60,6 @@ public class FinalScorePanelSimple : MonoBehaviour
             panelRoot.SetActive(true);
         }
 
-        // Update final timer label if present and panel shown
         if (shown && finalTimerText != null)
         {
             finalTimerText.text = $"Returning in {Mathf.CeilToInt(GameManager.Instance.FinalTimeLeft)}s";
@@ -75,7 +71,6 @@ public class FinalScorePanelSimple : MonoBehaviour
         if (entryTexts == null || entryTexts.Length == 0) return;
         if (runner == null) return;
 
-        // Gather players and their scores
         var list = new List<(PlayerRef p, int score, int charIdx)>();
         foreach (var p in runner.ActivePlayers)
         {
@@ -87,10 +82,8 @@ public class FinalScorePanelSimple : MonoBehaviour
             list.Add((p, sc, cidx));
         }
 
-        // sort descending by score
         var sorted = list.OrderByDescending(x => x.score).ThenBy(x => x.p.PlayerId).ToList();
 
-        // Fill the entry slots (index 0 => best). If fewer players than slots, remaining slots get hidden/cleared.
         for (int i = 0; i < entryTexts.Length; i++)
         {
             var txt = entryTexts[i];
@@ -107,7 +100,6 @@ public class FinalScorePanelSimple : MonoBehaviour
             }
             else
             {
-                // hide empty slots
                 txt.gameObject.SetActive(false);
             }
         }
@@ -121,16 +113,13 @@ public class FinalScorePanelSimple : MonoBehaviour
             return;
         }
 
-        // Ensure it's active and on top of Canvas
         panelRoot.SetActive(true);
         var c = panelRoot.GetComponentInParent<Canvas>();
         if (c != null) c.sortingOrder = 1000;
         panelRoot.transform.SetAsLastSibling();
 
-        // Force final update immediately
         RefreshLiveValues();
 
-        // Also update finalTimerText once
         if (finalTimerText != null && GameManager.Instance != null)
             finalTimerText.text = $"Returning in {Mathf.CeilToInt(GameManager.Instance.FinalTimeLeft)}s";
     }
