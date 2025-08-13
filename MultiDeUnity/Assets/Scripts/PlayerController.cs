@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Fusion;
 using Fusion.Sockets;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public struct PlayerInputData : INetworkInput
 {
@@ -20,13 +21,16 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 
     [Networked] public bool CanMove { get; set; } = false;
 
-    [Networked] private Vector3 NetworkedPosition { get; set; }
-    [Networked] private Quaternion NetworkedRotation { get; set; }
+    // COMMENTED OUT: legacy networked transform fields (kept for easy reversion)
+    // [Networked] private Vector3 NetworkedPosition { get; set; }
+    // [Networked] private Quaternion NetworkedRotation { get; set; }
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotationSpeed = 180f;
     [SerializeField] private float maxRotationAngle = 45f;
+
+    [SerializeField] InputActionReference MovementInputNew;
 
     [SerializeField] private Material[] playerMaterials;
 
@@ -34,8 +38,9 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 
     public override void Spawned()
     {
-        NetworkedPosition = transform.position;
-        NetworkedRotation = transform.rotation;
+        // legacy init removed (we are no longer using NetworkedPosition/Rotation)
+        // NetworkedPosition = transform.position;
+        // NetworkedRotation = transform.rotation;
         //lastFireTime = -fireCooldown;
         Runner.AddCallbacks(this);
 
@@ -54,17 +59,18 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
                 Vector3 dir = new Vector3(input.move.x, 0f, input.move.y);
                 if (dir.sqrMagnitude > 0.001f)
                 {
-                    NetworkedPosition += dir.normalized * moveSpeed * Runner.DeltaTime;
+                    // Host-authoritative: move the transform directly.
+                    transform.position += dir.normalized * moveSpeed * Runner.DeltaTime;
 
                     Quaternion target = Quaternion.LookRotation(dir);
                     float maxA = Mathf.Min(rotationSpeed * Runner.DeltaTime, maxRotationAngle);
-                    NetworkedRotation = Quaternion.RotateTowards(NetworkedRotation, target, maxA);
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, target, maxA);
                 }
             }
         }
 
-        transform.position = NetworkedPosition;
-        transform.rotation = NetworkedRotation;
+        // IMPORTANT: do NOT overwrite transform on non-host peers.
+        // NetworkTransform component on the prefab will replicate the host transform to clients.
     }
 
 
@@ -88,29 +94,32 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         Score += amount;
     }
 
+    // Updated helpers: now operate on transform directly (host-authoritative).
+    // These keep compatibility with code that calls SetNetworkedTransform / MoveNetworked.
+
     public void SetNetworkedTransform(Vector3 pos, Quaternion rot)
     {
-        if (!Object.HasStateAuthority)
+        // If host/state-authority: set authoritative transform.
+        if (Object.HasStateAuthority)
         {
             transform.position = pos;
             transform.rotation = rot;
             return;
         }
 
-        NetworkedPosition = pos;
-        NetworkedRotation = rot;
-
+        // If called on client for immediate visual update, also set transform (safe).
         transform.position = pos;
         transform.rotation = rot;
     }
 
     public void MoveNetworked(Vector3 delta)
     {
+        // Host-only: apply delta to transform. Clients should not invoke this.
         if (!Object.HasStateAuthority)
         {
             return;
         }
-        NetworkedPosition += delta;
+        transform.position += delta;
     }
 
     /*
@@ -142,16 +151,17 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 
 
 
-    #region INetworkRunnerCallbacks stubs (if used)
+    #region INetworkRunnerCallbacks stubs ()
     public void OnInput(NetworkRunner runner, NetworkInput inputPackage)
     {
         if (!Object.HasInputAuthority) return;
 
         inputPackage.Set(new PlayerInputData
         {
-            move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
+            move = MovementInputNew.action.ReadValue<Vector2>()
+            //move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
             // fire = Input.GetKey(KeyCode.Space)
-        });
+        }) ;
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }

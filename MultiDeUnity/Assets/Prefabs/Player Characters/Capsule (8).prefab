@@ -172,6 +172,7 @@ MonoBehaviour:
   moveSpeed: 15
   rotationSpeed: 180
   maxRotationAngle: 45
+  MovementInputNew: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   playerMaterials:
   - {fileID: 2100000, guid: c3b0fb8726bd1b34bbad2c30d0de93b8, type: 2}
 --- !u!54 &-8787209762640532201
@@ -213,7 +214,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5dd3f3f537e32e44b1a1aac22d2b2c7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  aiType: 1
   moveSpeed: 4
-  decisionInterval: 0.25
   pickupRange: 1.2
+  stopDistance: 0.15
+  decisionInterval: 0.25
   avoidThreshold: 0.75
