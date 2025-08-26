@@ -69,8 +69,6 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
             }
         }
 
-        // IMPORTANT: do NOT overwrite transform on non-host peers.
-        // NetworkTransform component on the prefab will replicate the host transform to clients.
     }
 
 
@@ -94,12 +92,9 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
         Score += amount;
     }
 
-    // Updated helpers: now operate on transform directly (host-authoritative).
-    // These keep compatibility with code that calls SetNetworkedTransform / MoveNetworked.
 
     public void SetNetworkedTransform(Vector3 pos, Quaternion rot)
     {
-        // If host/state-authority: set authoritative transform.
         if (Object.HasStateAuthority)
         {
             transform.position = pos;
@@ -107,14 +102,12 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
             return;
         }
 
-        // If called on client for immediate visual update, also set transform (safe).
         transform.position = pos;
         transform.rotation = rot;
     }
 
     public void MoveNetworked(Vector3 delta)
     {
-        // Host-only: apply delta to transform. Clients should not invoke this.
         if (!Object.HasStateAuthority)
         {
             return;

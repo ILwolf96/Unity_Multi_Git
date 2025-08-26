@@ -221,25 +221,69 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
     {
         if (!Object.HasStateAuthority) return;
 
-        Debug.Log($"[GameManager] Player left: {player.PlayerId}, attempting AI takeover.");
+        Debug.Log($"[GameManager] OnPlayerLeft called for Player {player.PlayerId}.");
 
-        var oldObj = runner.GetPlayerObject(player);
+        NetworkObject oldObj = runner.GetPlayerObject(player);
+
         if (oldObj == null)
         {
-            Debug.Log("[GameManager] No player object found for disconnected player.");
+            Debug.LogWarning($"[GameManager] Player object for {player.PlayerId} not found. Spawning fallback AI.");
+
+            if (playerPrefab == null)
+            {
+                Debug.LogError("[GameManager] playerPrefab not assigned — cannot spawn fallback AI.");
+                return;
+            }
+
+            Vector3 fallbackPos = Vector3.zero;
+            Quaternion fallbackRot = Quaternion.identity;
+
+            NetworkObject aiObj = runner.Spawn(playerPrefab, fallbackPos, fallbackRot);
+            if (aiObj == null)
+            {
+                Debug.LogError("[GameManager] Failed to spawn fallback AI object.");
+                return;
+            }
+
+            var aiPc = aiObj.GetComponent<PlayerController>();
+            if (aiPc != null)
+            {
+                aiPc.IsAI = true;
+                aiPc.CanMove = true;
+            }
+
+            var aiCtrl = aiObj.GetComponent<AIController>() ?? aiObj.gameObject.AddComponent<AIController>();
+            aiCtrl.SetAsAI();
+
+            Debug.Log($"[GameManager] Spawned fallback AI for disconnected player {player.PlayerId}.");
             return;
         }
 
         var oldPc = oldObj.GetComponent<PlayerController>();
-        int oldScore = 0;
+        int existingScore = 0;
         int charIdx = -1;
         Vector3 pos = oldObj.transform.position;
         Quaternion rot = oldObj.transform.rotation;
 
         if (oldPc != null)
         {
-            oldScore = oldPc.GetScore();
+            existingScore = oldPc.GetScore();
             charIdx = oldPc.NetworkedCharacterIndex;
+        }
+
+        if (oldPc != null)
+        {
+            oldPc.IsAI = true;
+            oldPc.CanMove = true;
+            Debug.Log($"[GameManager] Marked object as AI for player {player.PlayerId} (char {charIdx}, score {existingScore}).");
+        }
+
+        try
+        {
+            oldObj.RemoveInputAuthority();
+        }
+        catch
+        {
         }
 
         try
@@ -248,48 +292,35 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
         }
         catch { }
 
+        var aiController = oldObj.GetComponent<AIController>();
+        if (aiController == null)
+        {
+            aiController = oldObj.gameObject.AddComponent<AIController>();
+        }
+
         try
         {
-            runner.Despawn(oldObj);
+            aiController.SetAsAI();
         }
-        catch { }
-
-        if (playerPrefab == null)
+        catch
         {
-            Debug.LogError("[GameManager] playerPrefab not assigned — cannot spawn AI.");
-            return;
+            Debug.LogWarning("[GameManager] AIController.SetAsAI() call failed or is missing — ensure SetAsAI is implemented.");
         }
 
-        var aiObj = runner.Spawn(playerPrefab, pos, rot, inputAuthority: null);
-        if (aiObj == null)
+        if (CharacterSelectionManager.Instance != null && charIdx >= 0)
         {
-            Debug.LogError("[GameManager] Failed to spawn AI object.");
-            return;
+            try
+            {
+                CharacterSelectionManager.Instance.MarkCharacterTaken(charIdx);
+            }
+            catch { }
         }
 
-        var aiPc = aiObj.GetComponent<PlayerController>();
-        if (aiPc != null)
-        {
-            aiPc.NetworkedCharacterIndex = charIdx;
-            aiPc.AddScoreServer(oldScore);
-            aiPc.CanMove = true;
-            aiPc.SetNetworkedTransform(pos, rot);
-            aiPc.IsAI = true;
-        }
-
-        if (CharacterSelectionManager.Instance != null)
-        {
-            CharacterSelectionManager.Instance.MarkCharacterTaken(charIdx);
-        }
-
-        var aiCtrl = aiObj.GetComponent<AIController>();
-        if (aiCtrl != null)
-        {
-            aiCtrl.SetAsAI();
-        }
-
-        Debug.Log($"[GameManager] Spawned AI to replace Player {player.PlayerId} using character {charIdx}.");
+        Debug.Log($"[GameManager] Converted disconnected player {player.PlayerId} -> AI on character {charIdx}.");
     }
+
+
+
 
     #region INetworkRunnerCallbacks ()
 

@@ -21,7 +21,7 @@ public class AIController : NetworkBehaviour
     [Tooltip("How close to the coin before attempting pickup")]
     public float pickupRange = 1.2f;
 
-    [Tooltip("Small distance to stop moving when very close to target (avoid jitter)")]
+    [Tooltip("Small distance to stop moving when very close to target")]
     public float stopDistance = 0.15f;
 
     [Header("Decision")]
