@@ -3,7 +3,7 @@ using TMPro;
 using Fusion;
 using System.Collections.Generic;
 
-public class PrivateChatManager : NetworkBehaviour
+public class PrivateChatManager : NetworkBehaviour // That is not a thing that works....
 {
     [Header("Chat UI References")]
     public TMP_InputField messageInput;

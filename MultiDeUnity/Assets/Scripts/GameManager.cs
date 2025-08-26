@@ -291,7 +291,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
         Debug.Log($"[GameManager] Spawned AI to replace Player {player.PlayerId} using character {charIdx}.");
     }
 
-    #region INetworkRunnerCallbacks (stubs)
+    #region INetworkRunnerCallbacks ()
 
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }

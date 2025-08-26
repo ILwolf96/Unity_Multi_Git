@@ -24,7 +24,7 @@ public class Coin : NetworkBehaviour
         // Debug.Log($"[Coin] Spawned. HasStateAuthority={Object?.HasStateAuthority}, instance={gameObject.name}");
     }
 
-    // Called when Runner.Despawn is invoked (preferred over OnDestroy for Fusion lifecycle)
+    // Called when Runner.Despawn is invoked (It is better to use over OnDestroy in Fusion)
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         base.Despawned(runner, hasState);

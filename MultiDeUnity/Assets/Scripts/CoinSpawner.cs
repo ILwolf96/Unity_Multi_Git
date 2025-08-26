@@ -6,7 +6,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class CoinSpawner : NetworkBehaviour
 {
-    public static CoinSpawner Instance; // simple singleton for coin notifications
+    public static CoinSpawner Instance;
 
     [Header("Coin Prefabs (NetworkObject prefabs)")]
     [SerializeField] private NetworkObject coinPrefabSmall; // 5 points

@@ -151,7 +151,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 
 
 
-    #region INetworkRunnerCallbacks stubs ()
+   #region INetworkRunnerCallbacks ()
     public void OnInput(NetworkRunner runner, NetworkInput inputPackage)
     {
         if (!Object.HasInputAuthority) return;

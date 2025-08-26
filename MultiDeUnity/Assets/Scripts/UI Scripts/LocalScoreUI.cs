@@ -2,7 +2,6 @@ using UnityEngine;
 using TMPro;
 using Fusion;
 
-// Shows only the local player's score and character info during the match.
 [DisallowMultipleComponent]
 public class LocalScoreUI : MonoBehaviour
 {

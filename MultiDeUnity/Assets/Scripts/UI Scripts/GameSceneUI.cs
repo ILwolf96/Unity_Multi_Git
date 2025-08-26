@@ -38,7 +38,7 @@ private void UpdateUI()
         return;
     }
 
-    // If we've moved out of selection state, hide selection UI entirely
+    // If we've aren't at selection state, hide selection UI
     if (GameManager.Instance.CurrentState != GameManager.MatchState.CharacterSelection)
     {
         if (startButtonObject != null) startButtonObject.SetActive(false);
@@ -47,7 +47,6 @@ private void UpdateUI()
         return;
     }
 
-    // At this point we are in CharacterSelection state.
     // Determine whether local peer is host (state authority for GameManager)
     bool amHost = GameManager.Instance.Object.HasStateAuthority;
 
@@ -70,7 +69,6 @@ private void UpdateUI()
     {
         if (GameManager.Instance == null) return;
 
-        // Call RPC that requests start — actual start occurs only on host/state authority
         GameManager.Instance.RPC_RequestStartMatch();
     }
 }

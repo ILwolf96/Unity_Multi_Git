@@ -5710,7 +5710,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectionDuration: 30
-  gameDuration: 30
+  gameDuration: 90
   finalScreenDuration: 30
   playerPrefab: {fileID: 0}
   _CurrentState: 0

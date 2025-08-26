@@ -14,11 +14,8 @@ public class CharacterSelectionUI : MonoBehaviour
 
     private void Start()
     {
-        // If CharacterSelectionManager already exists it will perform button wiring itself.
-        // To avoid duplicate listeners we simply disable this component in that case.
         if (CharacterSelectionManager.Instance != null)
         {
-            // Optional: keep component but do not add listeners.
             enabled = false;
             return;
         }
@@ -30,18 +27,18 @@ public class CharacterSelectionUI : MonoBehaviour
             return;
         }
 
-        // Add listeners — if the manager isn't available yet they will call the manager when it becomes available.
         for (int i = 0; i < characterButtons.Length; i++)
         {
             int index = i;
             // Remove any pre-existing listeners to be safe
             characterButtons[i].onClick.RemoveAllListeners();
+            // Add listeners 
             characterButtons[i].onClick.AddListener(() =>
             {
-                // Guard in case manager hasn't been created yet. We'll attempt to call the RPC on the manager instance.
+                // in case manager hasn't been created yet.
                 if (CharacterSelectionManager.Instance != null)
                 {
-                    CharacterSelectionManager.Instance.RPC_RequestCharacterSelection(runner.LocalPlayer, index);
+                    CharacterSelectionManager.Instance.RPC_RequestCharacterSelection(runner.LocalPlayer, index); // call the RPC on the manager instance.
                 }
                 else
                 {
@@ -53,7 +50,7 @@ public class CharacterSelectionUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Clean up listeners to avoid leaking duplicate listeners across domain reloads or scene changes.
+        // Clean up listeners to avoid leaking duplicate listeners across reloads or scene changes. (note, didn't quite fixed the errors on scene Change)
         if (characterButtons != null)
         {
             foreach (var btn in characterButtons)

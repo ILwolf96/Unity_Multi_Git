@@ -36,7 +36,7 @@ public class FinalScorePanelSimple : MonoBehaviour
     {
         runner = FindObjectOfType<NetworkRunner>();
         if (entryTexts == null || entryTexts.Length == 0)
-            Debug.LogWarning("[FinalScorePanelSimple] No entryTexts assigned. Please assign TMP slots in inspector.");
+            Debug.LogWarning("[FinalScorePanelSimple] No entryTexts assigned.");
     }
 
     private void Update()
