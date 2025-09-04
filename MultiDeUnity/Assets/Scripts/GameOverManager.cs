@@ -28,6 +28,6 @@ public class GameOverManager : NetworkBehaviour
             Runner.Shutdown();
         }
 
-        SceneManager.LoadScene("SampleScene"); // Replace with main menu scene name if we change it!
+        SceneManager.LoadScene("SampleScene"); // Replace with main menu scene name if we change it, DO NOT FORGET!
     }
 }

@@ -8,7 +8,7 @@ public class LocalScoreUI : MonoBehaviour
     [Tooltip("TextMeshProUGUI that will display the local player's score")]
     public TextMeshProUGUI scoreText;
 
-    [Tooltip("Optional label prefix (e.g. \"Score:\")")]
+    [Tooltip(" label (\"Score:\")")]
     public string prefix = "Score: ";
 
     [Tooltip("Update interval in seconds")]
@@ -21,7 +21,7 @@ public class LocalScoreUI : MonoBehaviour
     {
         runner = FindObjectOfType<NetworkRunner>();
         if (scoreText == null)
-            Debug.LogWarning("[LocalScoreUI] scoreText not assigned.");
+            Debug.LogWarning("[LocalScoreUI] scoreText not assigned, again? for real?.");
     }
 
     private void Update()

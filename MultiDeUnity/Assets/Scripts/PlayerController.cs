@@ -38,7 +38,7 @@ public class PlayerController : NetworkBehaviour, INetworkRunnerCallbacks
 
     public override void Spawned()
     {
-        // legacy init removed (we are no longer using NetworkedPosition/Rotation)
+        // legacy init has been removed, BY ME muhahmaha (its evil laugh), but ye, we are no longer using NetworkedPosition/Rotation)
         // NetworkedPosition = transform.position;
         // NetworkedRotation = transform.rotation;
         //lastFireTime = -fireCooldown;

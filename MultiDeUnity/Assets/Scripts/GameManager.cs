@@ -17,7 +17,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
     }
 
     [Header("Match Settings")]
-    [Tooltip("Seconds given to players to choose characters (server/host authoritative).")]
+    [Tooltip("Seconds given to players to choose characters (host authoritative).")]
     public float selectionDuration = 30f;
 
     [Tooltip("Game duration in seconds.")]
@@ -27,7 +27,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
     public float finalScreenDuration = 10f;
 
     [Header("AI Replacement")]
-    [Tooltip("Assign your player prefab (NetworkObject) here — the same prefab used for players")]
+    [Tooltip("player prefab")]
     public NetworkObject playerPrefab;
 
 
@@ -255,7 +255,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
             var aiCtrl = aiObj.GetComponent<AIController>() ?? aiObj.gameObject.AddComponent<AIController>();
             aiCtrl.SetAsAI();
 
-            Debug.Log($"[GameManager] Spawned fallback AI for disconnected player {player.PlayerId}.");
+            Debug.Log($"[GameManager] Spawned AI for disconnected player {player.PlayerId}.");
             return;
         }
 
@@ -304,7 +304,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
         }
         catch
         {
-            Debug.LogWarning("[GameManager] AIController.SetAsAI() call failed or is missing — ensure SetAsAI is implemented.");
+            Debug.LogWarning("[GameManager] AIController.SetAsAI() call failed or is missing, wtf, how why where what?!.");
         }
 
         if (CharacterSelectionManager.Instance != null && charIdx >= 0)

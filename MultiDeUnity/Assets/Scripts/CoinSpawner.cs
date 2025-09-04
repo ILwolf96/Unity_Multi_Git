@@ -13,22 +13,22 @@ public class CoinSpawner : NetworkBehaviour
     [SerializeField] private NetworkObject coinPrefabLarge; // 10 points
 
     [Header("Spawn Mode")]
-    [Tooltip("If true, coins spawn at the listed spawnPoints. If false, coins spawn within the Random Range.")]
-    [SerializeField] private bool useSpawnPoints = true;
+    [Tooltip("If true, coins spawn at the listed spawnPoints. If false, coins spawn within the Random Range, RIGHT NOW It's False.")]
+    [SerializeField] private bool useSpawnPoints = false;
 
-    [Tooltip("Transforms used as fixed spawn points when Use Spawn Points is true.")]
+    [Tooltip("Transforms used as fixed spawn points when Use 'Spawn Points' is true.")]
     [SerializeField] private Transform[] spawnPoints;
 
-    [Header("Random Range (used when Use Spawn Points = false)")]
+    [Header("Random Range (used when Use 'Spawn Points' = false)")]
     [Tooltip("Y position at which coins will spawn (height).")]
     [SerializeField] private float spawnY = 1f;
-    [Tooltip("Minimum X for random spawn (world coordinates)")]
+    [Tooltip("Minimum X for random spawn (thy world coordinates)")]
     [SerializeField] private float minX = -10f;
-    [Tooltip("Maximum X for random spawn (world coordinates)")]
+    [Tooltip("Maximum X for random spawn (thy world coordinates)")]
     [SerializeField] private float maxX = 10f;
-    [Tooltip("Minimum Z for random spawn (world coordinates)")]
+    [Tooltip("Minimum Z for random spawn (thy world coordinates)")]
     [SerializeField] private float minZ = -10f;
-    [Tooltip("Maximum Z for random spawn (world coordinates)")]
+    [Tooltip("Maximum Z for random spawn (thy world coordinates)")]
     [SerializeField] private float maxZ = 10f;
 
     [Header("Spawn Settings")]
@@ -39,11 +39,11 @@ public class CoinSpawner : NetworkBehaviour
 
     [Header("Coin Type Probability")]
     [Range(0f, 1f)]
-    [Tooltip("Probability to spawn a large coin (10 points). e.g. 0.3 = 30% large, 70% small.")]
+    [Tooltip("Probability to spawn a large coin (10 points). 0.3 = 30% large, 70% small.")]
     [SerializeField] private float largeCoinProbability = 0.3f;
 
     [Header("Optional (Testing)")]
-    [Tooltip("If >=0, initializes UnityEngine.Random with this seed on host for reproducible spawn patterns.")]
+    [Tooltip("If >=0, initializes UnityEngine.Random with this seed on host for reproduciable (idk how to write that word) spawn patterns.")]
     [SerializeField] private int randomSeed = -1;
 
     private int currentCoinCount = 0;
@@ -105,7 +105,7 @@ public class CoinSpawner : NetworkBehaviour
             spawnRot = Quaternion.identity;
         }
 
-        // Host decides coin type
+        // Host is the one that decides coin type
         bool spawnLarge = Random.value < largeCoinProbability;
         NetworkObject prefabToUse = spawnLarge ? coinPrefabLarge : coinPrefabSmall;
 
@@ -136,7 +136,7 @@ public class CoinSpawner : NetworkBehaviour
         currentCoinCount = Mathf.Max(0, currentCoinCount - 1);
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR // that's a neat trick, friend
     private void OnDrawGizmosSelected()
     {
         if (!useSpawnPoints)

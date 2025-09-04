@@ -25,10 +25,10 @@ public class AIController : NetworkBehaviour
     public float stopDistance = 0.15f;
 
     [Header("Decision")]
-    [Tooltip("How often (seconds) to pick/reevaluate target. Movement is continuous every network tick.")]
+    [Tooltip("How often (seconds) to pick target. Movement is continuous every network tick.")]
     public float decisionInterval = 0.25f;
 
-    [Tooltip("If another player is this fraction closer to a coin than the AI, the Smart AI will skip that coin.")]
+    [Tooltip("If another player is this closer to a coin than the AI, the Smart AI will skip that coin.")]
     [Range(0f, 1f)]
     public float avoidThreshold = 0.75f;
 

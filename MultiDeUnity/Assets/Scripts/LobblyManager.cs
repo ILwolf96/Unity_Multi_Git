@@ -7,7 +7,7 @@ using Fusion.Sockets;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 
-public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
+public class LobbyManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("Lobby UI")]
     [SerializeField] private TMP_InputField lobbyInput = null;
@@ -67,7 +67,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         string lobbyName = lobbyInput.text.Trim();
         if (string.IsNullOrEmpty(lobbyName))
         {
-            Debug.LogWarning("Lobby name cannot be empty.");
+            Debug.LogWarning("Lobby name cannot be empty, Stupid.");
             return;
         }
 
@@ -133,7 +133,7 @@ public class LobbyBrowser : MonoBehaviour, INetworkRunnerCallbacks
         string newSessionName = sessionNameInput.text.Trim();
         if (string.IsNullOrEmpty(newSessionName))
         {
-            Debug.LogWarning("Session name cannot be empty.");
+            Debug.LogWarning("Session name cannot be empty, stupid.");
             return;
         }
 

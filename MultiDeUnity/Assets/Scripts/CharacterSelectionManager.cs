@@ -238,7 +238,7 @@ public class CharacterSelectionManager : NetworkBehaviour
         RPC_SelectionApproved(requester);
     }
 
-    #region Unused INetworkRunnerCallbacks
+    #region INetworkRunnerCallbacks
 
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnConnectFailed(NetworkRunner runner, NetAddress addr, NetConnectFailedReason reason) { }

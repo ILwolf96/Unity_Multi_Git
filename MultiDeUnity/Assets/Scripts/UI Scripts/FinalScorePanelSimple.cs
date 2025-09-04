@@ -9,17 +9,17 @@ using Fusion;
 public class FinalScorePanelSimple : MonoBehaviour
 {
     [Header("Panel & entries")]
-    [Tooltip("The root GameObject for the final scoreboard panel (initially inactive).")]
+    [Tooltip("The root GameObject for the final scoreboard panel (initially inactive, remeber).")]
     public GameObject panelRoot;
 
-    [Tooltip("TMP text fields for each slot (index 0 = top rank).")]
+    [Tooltip("TMP text fields for each slot (index 0 is the highest rank/score).")]
     public TextMeshProUGUI[] entryTexts;
 
-    [Tooltip("Optional TMP to show final countdown (e.g., 'Returning in 10s').")]
+    [Tooltip("TMP to show final countdown (Returning in 10s).")]
     public TextMeshProUGUI finalTimerText;
 
     [Header("Update")]
-    [Tooltip("How often (seconds) to refresh the live values while playing.")]
+    [Tooltip("How often (seconds) to refresh the score values while the game is live.")]
     public float refreshInterval = 0.25f;
 
     private NetworkRunner runner;
@@ -93,7 +93,7 @@ public class FinalScorePanelSimple : MonoBehaviour
             {
                 var item = sorted[i];
                 string label = $"Player {item.p.PlayerId}";
-                if (item.p == runner.LocalPlayer) label += " (YOU)";
+                if (item.p == runner.LocalPlayer) label += " (it's a You!)";
                 if (item.charIdx >= 0) label += $" - Char {item.charIdx}";
                 txt.gameObject.SetActive(true);
                 txt.text = $"{i + 1}. {label}\t{item.score}";
@@ -109,7 +109,7 @@ public class FinalScorePanelSimple : MonoBehaviour
     {
         if (panelRoot == null)
         {
-            Debug.LogError("[FinalScorePanelSimple] panelRoot not assigned.");
+            Debug.LogError("[FinalScorePanelSimple] panelRoot not assigned, you HAD ONE JOB, Follow The Panel Root CJ.");
             return;
         }
 

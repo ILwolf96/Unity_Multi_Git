@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum CharacterMaterialType : byte
+public enum CharacterMaterialType : byte // why go higher then byte if that gets the job done
 {
     None = 0,
     PlayerGreen = 1,

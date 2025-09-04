@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class GameTimerUI : MonoBehaviour
+public class GameTimerUI : MonoBehaviour // Tick Tack
 {
     public TextMeshProUGUI timerText;
     public bool showDuringSelection = false;

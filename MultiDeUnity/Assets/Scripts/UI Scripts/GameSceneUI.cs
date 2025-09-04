@@ -6,9 +6,9 @@ using Fusion;
 public class GameSceneUI : MonoBehaviour
 {
     [Header("UI Elements")]
-    [SerializeField] private GameObject startButtonObject = null; // contains Button for host
+    [SerializeField] private GameObject startButtonObject = null; // contains Button for host, IT IS A HOST ONLY Object!
     [SerializeField] private Button startButton = null;
-    [SerializeField] private GameObject waitingForHostObject = null; // show when not host
+    [SerializeField] private GameObject waitingForHostObject = null; // show when not host, aka Thy Client
     [SerializeField] private TMP_Text selectionTimerText = null;
 
     private NetworkRunner runner;
@@ -38,7 +38,6 @@ private void UpdateUI()
         return;
     }
 
-    // If we've aren't at selection state, hide selection UI
     if (GameManager.Instance.CurrentState != GameManager.MatchState.CharacterSelection)
     {
         if (startButtonObject != null) startButtonObject.SetActive(false);
@@ -47,7 +46,6 @@ private void UpdateUI()
         return;
     }
 
-    // Determine whether local peer is host (state authority for GameManager)
     bool amHost = GameManager.Instance.Object.HasStateAuthority;
 
     if (startButtonObject != null)

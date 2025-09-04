@@ -2,7 +2,7 @@ using Fusion;
 using UnityEngine;
 
 [RequireComponent(typeof(NetworkObject))]
-public class Projectile : NetworkBehaviour
+public class Projectile : NetworkBehaviour // ye... so about that, it was removed, idc, too much trouble, left it in cuz afrid of breaking the project
 {
     [Networked] private Vector3 NetworkedPosition { get; set; }
 
