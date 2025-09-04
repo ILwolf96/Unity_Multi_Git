@@ -206,16 +206,15 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
         Debug.Log("[GameManager] Match ended by timer. Showing final results.");
     }
 
+    // Problem was racing, Host was leaving first, and all the clients got left behind
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void RPC_ReturnToLobby()
+    public void RPC_ReturnToLobby() 
     {
-        if (Runner != null && Runner.IsRunning)
-        {
-            try { Runner.Shutdown(); } catch { }
-        }
-
-        SceneManager.LoadScene("SampleScene");
+        Debug.Log("[GameManager] RPC_ReturnToLobby received on peer, Hermes will take it from here.");
+        Hermes.StartReturnToLobbySequence("SampleScene");
     }
+
+
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
@@ -227,11 +226,11 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 
         if (oldObj == null)
         {
-            Debug.LogWarning($"[GameManager] Player object for {player.PlayerId} not found. Spawning fallback AI.");
+            Debug.LogWarning($"[GameManager] Player object for {player.PlayerId} not found. Spawning backup AI.");
 
             if (playerPrefab == null)
             {
-                Debug.LogError("[GameManager] playerPrefab not assigned — cannot spawn fallback AI.");
+                Debug.LogError("[GameManager] playerPrefab not assigned, cannot spawn backup AI.");
                 return;
             }
 
@@ -241,7 +240,7 @@ public class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
             NetworkObject aiObj = runner.Spawn(playerPrefab, fallbackPos, fallbackRot);
             if (aiObj == null)
             {
-                Debug.LogError("[GameManager] Failed to spawn fallback AI object.");
+                Debug.LogError("[GameManager] Failed to spawn backup AI object.");
                 return;
             }
 
